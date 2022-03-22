@@ -64,7 +64,27 @@ void systick_init(uint32_t freq){
 void __attribute__((interrupt)) SysTick_Handler(){
 }
 
+void setLed(uint8_t on) {
+    if (on) {
+        GPIOA.ODR |= (1 << 5);
+    } else {
+        GPIOA.ODR &= ~(1 << 5);
+    }
+}
+
 int main() {
+
+    init_LD2();
+    init_PB();
+
+    uint8_t on = 0;
+    while (1) {
+        setLed(on);
+        on = !on;
+        tempo_500ms();
+    }
+
+    return 0;
 
 	printf("\e[2J\e[1;1H\r\n");
 	printf("\e[01;32m*** Welcome to Nucleo F446 ! ***\e[00m\r\n");
