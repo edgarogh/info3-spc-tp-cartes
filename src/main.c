@@ -63,9 +63,6 @@ void systick_init(uint32_t freq){
 	SysTick.CTRL |= 7;
 }
 
-void __attribute__((interrupt)) SysTick_Handler(){
-}
-
 void setLed(bool on) {
     if (on) {
         GPIOA.ODR |= (1 << 5);
@@ -85,22 +82,17 @@ char bitsToHex(uint8_t bits4) {
 }
 
 int main() {
-    init_USART();
+    init_LD2();
+    systick_init(1000);
 
-    printf("Quel est votre caractère ASCII porte bonheur ? ");
-    char porteBonheur = _getc();
-    printf("\nAh ouais c'est un caractère cool '%c' en sah\n", porteBonheur);
-    _puts("J'aime l'harmonie que forment ses composantes hexadecimales: ");
-
-    char hex[] = {
-            bitsToHex(porteBonheur >> 4),
-            bitsToHex(porteBonheur & 0b1111),
-            0,
-    };
-
-    _puts(hex);
-    _putc('\n');
-
-	return 0;
+    while (1);
 }
 
+uint32_t ticks = 0;
+bool on = 1;
+void __attribute__((interrupt)) SysTick_Handler(){
+    if (ticks++ % 500 == 0) {
+        setLed(on);
+        on = !on;
+    }
+}
