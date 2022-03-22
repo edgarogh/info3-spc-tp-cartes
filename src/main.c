@@ -83,8 +83,11 @@ int main() {
     init_LD2();
     init_PB();
 
+    bool on = 1;
     while (1) {
-        setLed(isButtonPressed());
+        on = isButtonPressed() || !on;
+        setLed(on);
+        tempo_500ms();
     }
 
     return 0;
