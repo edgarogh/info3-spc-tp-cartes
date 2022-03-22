@@ -78,32 +78,29 @@ bool isButtonPressed() {
     return (GPIOC.IDR & (1 << 13)) ? 0 : 1;
 }
 
+char bitsToHex(uint8_t bits4) {
+    if (bits4 < 10) return '0' + bits4;
+    if (bits4 < 16) return 'A' + bits4 - 10;
+    return '-';
+}
+
 int main() {
+    init_USART();
 
-    init_LD2();
-    init_PB();
+    printf("Quel est votre caractère ASCII porte bonheur ? ");
+    char porteBonheur = _getc();
+    printf("\nAh ouais c'est un caractère cool '%c' en sah\n", porteBonheur);
+    _puts("J'aime l'harmonie que forment ses composantes hexadecimales: ");
 
-    bool on = 1;
-    while (1) {
-        on = isButtonPressed() || !on;
-        setLed(on);
-        tempo_500ms();
-    }
+    char hex[] = {
+            bitsToHex(porteBonheur >> 4),
+            bitsToHex(porteBonheur & 0b1111),
+            0,
+    };
 
-    return 0;
+    _puts(hex);
+    _putc('\n');
 
-	printf("\e[2J\e[1;1H\r\n");
-	printf("\e[01;32m*** Welcome to Nucleo F446 ! ***\e[00m\r\n");
-
-	printf("\e[01;31m\t%08lx-%08lx-%08lx\e[00m\r\n",
-	       U_ID[0],U_ID[1],U_ID[2]);
-	printf("SYSCLK = %9lu Hz\r\n",get_SYSCLK());
-	printf("AHBCLK = %9lu Hz\r\n",get_AHBCLK());
-	printf("APB1CLK= %9lu Hz\r\n",get_APB1CLK());
-	printf("APB2CLK= %9lu Hz\r\n",get_APB2CLK());
-	printf("\r\n");
-
-	while (1);
 	return 0;
 }
 
