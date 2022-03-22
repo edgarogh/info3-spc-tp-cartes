@@ -36,6 +36,10 @@ void init_USART(){
 	USART2.BRR = get_APB1CLK()/9600;
 	USART2.CR3 = 0;
 	USART2.CR2 = 0;
+
+    // Interruption
+    NVIC.ISER[1] |= (1<<6);
+    USART2.CR1 |= (1<<5);
 }
 
 void _putc(char c){
@@ -91,22 +95,7 @@ int main() {
 
     printf("Bonsoir. Z pour augmenter le délai, S pour réduire.");
 
-    while (1) {
-        switch (_getc()) {
-            case 'Z':
-            case 'z':
-                speed *= 2;
-                break;
-            case 'S':
-            case 's':
-                speed /= 2;
-                break;
-            default:
-                break;
-        }
-
-        if (speed < 1) speed = 1;
-    }
+    while (1);
 }
 
 bool on = 1;
@@ -114,5 +103,20 @@ void __attribute__((interrupt)) SysTick_Handler(){
     if (ticks++ % speed == 0) {
         setLed(on);
         on = !on;
+    }
+}
+
+void __attribute__((interrupt)) USART2_Handler(){
+    switch (_getc()) {
+        case 'Z':
+        case 'z':
+            speed *= 2;
+            break;
+        case 'S':
+        case 's':
+            speed /= 2;
+            break;
+        default:
+            break;
     }
 }
