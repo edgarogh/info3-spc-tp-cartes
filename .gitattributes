@@ -1,0 +1,5 @@
+/devtools linguist-vendored
+/link linguist-vendored
+/src/boot linguist-vendored
+/src/sys linguist-vendored
+Makefile linguist-generated
