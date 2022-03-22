@@ -81,17 +81,26 @@ char bitsToHex(uint8_t bits4) {
     return '-';
 }
 
+uint32_t SPEEDS[] = { 50, 100, 500, 1000 };
+uint8_t speed = 2;
+uint32_t ticks = 0;
+
 int main() {
     init_LD2();
     systick_init(1000);
 
-    while (1);
+    while (1) {
+        while (!isButtonPressed());
+        while (isButtonPressed());
+
+        speed++;
+        speed %= 4;
+    }
 }
 
-uint32_t ticks = 0;
 bool on = 1;
 void __attribute__((interrupt)) SysTick_Handler(){
-    if (ticks++ % 500 == 0) {
+    if (ticks++ % SPEEDS[speed] == 0) {
         setLed(on);
         on = !on;
     }
