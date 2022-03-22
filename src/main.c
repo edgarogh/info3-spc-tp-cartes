@@ -81,26 +81,37 @@ char bitsToHex(uint8_t bits4) {
     return '-';
 }
 
-uint32_t SPEEDS[] = { 50, 100, 500, 1000 };
-uint8_t speed = 2;
+uint32_t speed = 512;
 uint32_t ticks = 0;
 
 int main() {
     init_LD2();
+    init_USART();
     systick_init(1000);
 
-    while (1) {
-        while (!isButtonPressed());
-        while (isButtonPressed());
+    printf("Bonsoir. Z pour augmenter le délai, S pour réduire.");
 
-        speed++;
-        speed %= 4;
+    while (1) {
+        switch (_getc()) {
+            case 'Z':
+            case 'z':
+                speed *= 2;
+                break;
+            case 'S':
+            case 's':
+                speed /= 2;
+                break;
+            default:
+                break;
+        }
+
+        if (speed < 1) speed = 1;
     }
 }
 
 bool on = 1;
 void __attribute__((interrupt)) SysTick_Handler(){
-    if (ticks++ % SPEEDS[speed] == 0) {
+    if (ticks++ % speed == 0) {
         setLed(on);
         on = !on;
     }
