@@ -6,6 +6,8 @@
 #include "sys/init.h"
 #include "sys/clock.h"
 
+typedef uint8_t bool;
+
 static volatile char c=0;
 
 void init_LD2(){
@@ -64,7 +66,7 @@ void systick_init(uint32_t freq){
 void __attribute__((interrupt)) SysTick_Handler(){
 }
 
-void setLed(uint8_t on) {
+void setLed(bool on) {
     if (on) {
         GPIOA.ODR |= (1 << 5);
     } else {
@@ -72,16 +74,17 @@ void setLed(uint8_t on) {
     }
 }
 
+bool isButtonPressed() {
+    return (GPIOC.IDR & (1 << 13)) ? 0 : 1;
+}
+
 int main() {
 
     init_LD2();
     init_PB();
 
-    uint8_t on = 0;
     while (1) {
-        setLed(on);
-        on = !on;
-        tempo_500ms();
+        setLed(isButtonPressed());
     }
 
     return 0;
