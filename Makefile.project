@@ -13,7 +13,7 @@ ASMDEPS =
 SRCS = src/boot/startup.c src/boot/interrupts.c
 SRCS += src/sys/clock.c src/sys/power.c src/sys/serial_io.c 
 SRCS += src/sys/init.c src/sys/syscalls.c
-SRCS += src/main.c
+SRCS += src/main.c src/screen.c src/spi.c
 
 # List of C header files (optional)
 CDEPS = src/sys/clock.h src/sys/power.h src/sys/serial_io.h

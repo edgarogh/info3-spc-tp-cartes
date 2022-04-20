@@ -28,6 +28,14 @@ void tempo_500ms(){
 
 }
 
+const uint32_t MS100 = 5600000 / 5;
+void tempo_100ms(){
+    volatile uint32_t duree;
+    for (duree = 0; duree < MS100; duree++) {
+        ;
+    }
+}
+
 void init_USART(){
 	GPIOA.MODER = (GPIOA.MODER & 0xFFFFFF0F) | 0x000000A0;
 	GPIOA.AFRL = (GPIOA.AFRL & 0xFFFF00FF) | 0x00007700;
@@ -65,19 +73,13 @@ void __attribute__((interrupt)) SysTick_Handler(){
 }
 
 int main() {
+    init_USART();
+    screen_init();
 
-	printf("\e[2J\e[1;1H\r\n");
-	printf("\e[01;32m*** Welcome to Nucleo F446 ! ***\e[00m\r\n");
-
-	printf("\e[01;31m\t%08lx-%08lx-%08lx\e[00m\r\n",
-	       U_ID[0],U_ID[1],U_ID[2]);
-	printf("SYSCLK = %9lu Hz\r\n",get_SYSCLK());
-	printf("AHBCLK = %9lu Hz\r\n",get_AHBCLK());
-	printf("APB1CLK= %9lu Hz\r\n",get_APB1CLK());
-	printf("APB2CLK= %9lu Hz\r\n",get_APB2CLK());
-	printf("\r\n");
-
-	while (1);
-	return 0;
+    uint32_t n = 0;
+    while (1) {
+        screen_writeCounter(n++);
+        tempo_100ms();
+    }
 }
 
