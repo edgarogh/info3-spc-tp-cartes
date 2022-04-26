@@ -1,65 +1,36 @@
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include "sys/cm4.h"
 #include "sys/devices.h"
 #include "sys/init.h"
 #include "sys/clock.h"
 
-static volatile char c=0;
+#include "screen.h"
 
-void init_LD2(){
-	RCC.AHB1ENR |= 0x01;
-	GPIOA.MODER = (GPIOA.MODER & 0xFFFFF3FF) | 0x00000400;
-	GPIOA.OTYPER &= (0x1<<5);
-	GPIOA.OSPEEDR |= 0x03<<10;
-	GPIOA.PUPDR &= 0xFFFFF3FF;
-}
+#define DEBOUNCE(name, amount) static uint64_t name; if (millis - name < amount) { return; } else { name = millis; }
 
 void init_PB(){
 	GPIOC.MODER = (GPIOC.MODER & 0xF3FFFFFF) ;
 }
 
-void tempo_500ms(){
-	volatile uint32_t duree;
-	for (duree = 0; duree < 5600000 ; duree++){
-		;
-	}
+void button_irqPC13_init() {
+    init_PB();
+    SYSCFG.EXTICR4 = (SYSCFG.EXTICR4 & ~(0xf<<4)) | (0x2<<4);
 
+    // Setup interrupt for EXTI13, falling edge
+    EXTI.IMR |= (1<<13);
+    EXTI.RTSR &= ~(1<<13);
+    EXTI.FTSR |= (1<<13);
+    EXTI.PR |= (1<<13);
+
+    // enable EXTI15-10 IRQ PC13
+    NVIC.ISER[40/32]=(1<<(40%32));
 }
 
-const uint32_t MS100 = 5600000 / 5;
-void tempo_100ms(){
+const uint32_t MS100 = 5600000 / 50;
+void tempo_10ms(){
     volatile uint32_t duree;
     for (duree = 0; duree < MS100; duree++) {
         ;
     }
-}
-
-void init_USART(){
-	GPIOA.MODER = (GPIOA.MODER & 0xFFFFFF0F) | 0x000000A0;
-	GPIOA.AFRL = (GPIOA.AFRL & 0xFFFF00FF) | 0x00007700;
-	USART2.BRR = get_APB1CLK()/9600;
-	USART2.CR3 = 0;
-	USART2.CR2 = 0;
-}
-
-void _putc(char c){
-	while( (USART2.SR & 0x80) == 0);  
-	USART2.DR = c;
-}
-
-void _puts(char *c){
-	int len = strlen(c);
-	for (int i=0;i<len;i++){
-		_putc(c[i]);
-	}
-}
-
-char _getc(){
-	while ( (USART2.SR & 0x20) == 0); 
-	return USART2.DR;
-
 }
 
 void systick_init(uint32_t freq){
@@ -69,17 +40,50 @@ void systick_init(uint32_t freq){
 	SysTick.CTRL |= 7;
 }
 
-void __attribute__((interrupt)) SysTick_Handler(){
+enum {
+    StIdle,
+    StMeasuring,
+    StPaused,
+} current_state;
+
+uint64_t millis = 0;
+uint64_t chrono_millis = 0;
+
+void __attribute__((interrupt)) EXTI15_10_Handler() {
+    DEBOUNCE(EXTI15_10_Handler_last, 200);
+
+    switch (current_state) {
+        default:
+        case StIdle:
+            current_state = StMeasuring;
+            break;
+        case StMeasuring:
+            current_state = StPaused;
+            break;
+        case StPaused:
+            current_state = StMeasuring;
+            break;
+    }
+
+    EXTI.PR |= (1<<13);
 }
 
-int main() {
-    init_USART();
-    screen_init();
+void __attribute__((interrupt)) SysTick_Handler(){
+    millis++;
+    if (current_state == StMeasuring) chrono_millis++;
+}
 
-    uint32_t n = 0;
+_Noreturn int main() {
+    systick_init(1000);
+    screen_init();
+    button_irqPC13_init();
+
+    current_state = StIdle;
+
     while (1) {
-        screen_writeCounter(n++);
-        tempo_100ms();
+        screen_writeCounter(chrono_millis / 100);
+        screen_setOn((current_state != StPaused) || (millis % 500 < 250));
+        tempo_10ms();
     }
 }
 

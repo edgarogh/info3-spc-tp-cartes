@@ -9,5 +9,6 @@
 
 void screen_init(void);
 void screen_writeCounter(uint32_t tenths);
+void screen_setOn(bool on);
 
 #endif

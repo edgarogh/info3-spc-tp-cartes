@@ -97,3 +97,11 @@ void screen_writeCounter(uint32_t tenths) {
         screen_commit();
     }
 }
+
+bool screen_isOn = true;
+void screen_setOn(bool on) {
+    if (on != screen_isOn) {
+        screen_control(12, on);
+        screen_isOn = on;
+    }
+}
