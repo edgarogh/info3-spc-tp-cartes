@@ -98,10 +98,10 @@ void screen_writeCounter(uint32_t tenths) {
     }
 }
 
-bool screen_isOn = true;
-void screen_setOn(bool on) {
-    if (on != screen_isOn) {
-        screen_control(12, on);
-        screen_isOn = on;
+uint8_t screen_brightness = 0;
+void screen_setBrightness(unsigned char brightness) {
+    if (brightness != screen_brightness) {
+        screen_control(10, brightness);
+        screen_brightness = brightness;
     }
 }

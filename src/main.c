@@ -40,14 +40,14 @@ void systick_init(uint32_t freq){
 	SysTick.CTRL |= 7;
 }
 
-enum {
+volatile enum {
     StIdle,
     StMeasuring,
     StPaused,
 } current_state;
 
-uint64_t millis = 0;
-uint64_t chrono_millis = 0;
+volatile uint64_t millis = 0;
+volatile uint64_t chrono_millis = 0;
 
 void __attribute__((interrupt)) EXTI15_10_Handler() {
     DEBOUNCE(EXTI15_10_Handler_last, 200);
@@ -73,8 +73,13 @@ void __attribute__((interrupt)) SysTick_Handler(){
     if (current_state == StMeasuring) chrono_millis++;
 }
 
+__really_inline__ unsigned char brightness() {
+    uint8_t b = (millis / 15) % 32;
+    return (b < 16) ? b : 31 - b;
+}
+
 _Noreturn int main() {
-    systick_init(1000);
+    systick_init(980);
     screen_init();
     button_irqPC13_init();
 
@@ -82,7 +87,7 @@ _Noreturn int main() {
 
     while (1) {
         screen_writeCounter(chrono_millis / 100);
-        screen_setOn((current_state != StPaused) || (millis % 500 < 250));
+        screen_setBrightness((current_state != StPaused) ? 15 : brightness());
         tempo_10ms();
     }
 }
